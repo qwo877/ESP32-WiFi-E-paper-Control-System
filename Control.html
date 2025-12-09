@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>電子紙控制面板</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 16px;
+      background: #f5f5f5;
+    }
+    h1 { margin-bottom: 8px; }
+    .card {
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .col {
+      flex: 1 1 260px;
+      min-width: 260px;
+    }
+    label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+    }
+    button {
+      margin-top: 6px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: #1976d2;
+      color: #fff;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 4px;
+      font-size: 12px;
+      min-height: 16px;
+    }
+    .status.ok { color: #2e7d32; }
+    .status.err { color: #c62828; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <label for="t1">ESP32 #1</label>
+        <textarea id="t1" placeholder="文字"></textarea>
+        <button onclick="sendSingle(1)">送出</button>
+        <div id="s1" class="status"></div>
+      </div>
+      <div class="col">
+        <label for="t2">ESP32 #2</label>
+        <textarea id="t2" placeholder="文字"></textarea>
+        <button onclick="sendSingle(2)">送出</button>
+        <div id="s2" class="status"></div>
+      </div>
+      <div class="col">
+        <label for="t3">ESP32 #3</label>
+        <textarea id="t3" placeholder="文字"></textarea>
+        <button onclick="sendSingle(3)">送出</button>
+        <div id="s3" class="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size: 16px;">同步顯示</h2>
+    <textarea id="tAll" placeholder="文字"></textarea>
+    <button onclick="sendAllSame()">送出</button>
+    <div id="sAll" class="status"></div>
+  </div>
+
+  <script>
+
+    function getIP(idx) {
+      const table = {
+        1: 'ip ',  // ESP32 #1
+        2: 'ip',  // ESP32 #2
+        3: 'ip'   // ESP32 #3
+      };
+      return table[idx];
+    }
+
+    async function postText(ip, text) {
+      const url = `http://${ip}/update`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: text
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.text();
+    }
+
+    async function sendSingle(idx) {
+      const ip = getIP(idx);
+      const text = document.getElementById('t' + idx).value;
+      const statusEl = document.getElementById('s' + idx);
+
+      statusEl.textContent = '送出中... (' + ip + ')';
+      statusEl.className = 'status';
+
+      try {
+        const reply = await postText(ip, text);
+        statusEl.textContent = '成功：' + reply;
+        statusEl.className = 'status ok';
+      } catch (e) {
+        statusEl.textContent = '失敗：' + e.message;
+        statusEl.className = 'status err';
+      }
+    }
+
+    async function sendAllSame() {
+      const text = document.getElementById('tAll').value;
+      const sAll = document.getElementById('sAll');
+      const ips = [getIP(1), getIP(2), getIP(3)];
+
+      sAll.textContent = '同步更新中...';
+      sAll.className = 'status';
+
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        try {
+          const reply = await postText(ips[i], text);
+          results.push(`#${i+1} OK(${reply})`);
+        } catch (e) {
+          results.push(`#${i+1} NG(${e.message})`);
+        }
+      }
+      sAll.textContent = results.join(' | ');
+      if (results.some(r => r.includes('NG'))) {
+        sAll.className = 'status err';
+      } else {
+        sAll.className = 'status ok';
+      }
+    }
+  </script>
+</body>
+</html>
