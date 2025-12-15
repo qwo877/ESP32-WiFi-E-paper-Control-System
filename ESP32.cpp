@@ -35,6 +35,7 @@ void epdClear()
     display.fillScreen(GxEPD_WHITE);
   }
   while (display.nextPage());
+  display.hibernate();
 }
 
 void epdShowText(const String& text)
@@ -62,6 +63,7 @@ void epdShowText(const String& text)
     display.print(t);
   }
   while (display.nextPage());
+  display.hibernate();
 }
 
 void handleRoot()
@@ -144,4 +146,5 @@ void setup()
 void loop()
 {
   server.handleClient();
+
 }
