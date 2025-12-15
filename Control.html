@@ -2,108 +2,284 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>電子紙控制面板</title>
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
       padding: 16px;
-      background: #f5f5f5;
+      min-height: 100vh;
     }
-    h1 { margin-bottom: 8px; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { 
+      color: #333; 
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
     .card {
       background: #fff;
-      padding: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .device-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin-bottom: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .device-header input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .device-header input[type="text"]:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    .device-name {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+      min-width: 100px;
     }
     .row {
       display: flex;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
     }
     .col {
-      flex: 1 1 260px;
-      min-width: 260px;
+      flex: 1 1 300px;
+      min-width: 280px;
     }
     label {
       font-size: 14px;
+      font-weight: 500;
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      color: #555;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
     }
     textarea {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 14px;
       resize: vertical;
-      min-height: 60px;
+      min-height: 80px;
+    }
+    textarea:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
     }
     button {
-      margin-top: 6px;
-      padding: 6px 12px;
+      flex: 1;
+      padding: 10px 16px;
       font-size: 14px;
-      border-radius: 4px;
+      font-weight: 500;
+      border-radius: 6px;
       border: none;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
       background: #1976d2;
       color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1565c0;
+    }
+    .btn-secondary {
+      background: #757575;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background: #616161;
+    }
+    .btn-danger {
+      background: #d32f2f;
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: #c62828;
     }
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
     .status {
-      margin-top: 4px;
-      font-size: 12px;
-      min-height: 16px;
+      margin-top: 8px;
+      padding: 8px;
+      font-size: 13px;
+      min-height: 20px;
+      border-radius: 4px;
+      animation: fadeIn 0.3s;
     }
-    .status.ok { color: #2e7d32; }
-    .status.err { color: #c62828; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .status.ok { 
+      background: #e8f5e9; 
+      color: #2e7d32; 
+      border: 1px solid #c8e6c9;
+    }
+    .status.err { 
+      background: #ffebee; 
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    .status.pending {
+      background: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffe0b2;
+    }
+    .preset-section {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .preset-section h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .preset-btn {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover {
+      background: #1976d2;
+      color: white;
+      border-color: #1976d2;
+    }
+    .sync-section {
+      color: #333;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .sync-section h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .sync-section textarea {
+      margin-bottom: 12px;
+    }
+    .settings-icon {
+      cursor: pointer;
+      padding: 4px;
+      color: #757575;
+    }
+    .settings-icon:hover {
+      color: #1976d2;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="container">
+    <h1>電子紙控制面板</h1>
+
     <div class="row">
       <div class="col">
-        <label for="t1">ESP32 #1</label>
-        <textarea id="t1" placeholder="文字"></textarea>
-        <button onclick="sendSingle(1)">送出</button>
-        <div id="s1" class="status"></div>
+        <div class="card">
+          <div class="device-header">
+            <span class="device-name">ESP32 #1</span>
+            <input type="text" id="ip1" placeholder="輸入 IP 位址" value="10.73.10.116">
+          </div>
+          
+          
+          <label for="t1">顯示內容</label>
+          <textarea id="t1" placeholder="文字"></textarea>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="sendSingle(1)">更新顯示</button>
+            <button class="btn-secondary" onclick="testConnection(1)">測試連線</button>
+            <button class="btn-danger" onclick="clearDisplay(1)">清除</button>
+          </div>
+          <div id="s1" class="status"></div>
+        </div>
       </div>
+
       <div class="col">
-        <label for="t2">ESP32 #2</label>
-        <textarea id="t2" placeholder="文字"></textarea>
-        <button onclick="sendSingle(2)">送出</button>
-        <div id="s2" class="status"></div>
+        <div class="card">
+          <div class="device-header">
+            <span class="device-name">ESP32 #2</span>
+            <input type="text" id="ip2" placeholder="輸入 IP 位址" value="10.73.10.198">
+          </div>
+          
+          
+          <label for="t2">顯示內容</label>
+          <textarea id="t2" placeholder="文字"></textarea>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="sendSingle(2)">更新顯示</button>
+            <button class="btn-secondary" onclick="testConnection(2)">測試連線</button>
+            <button class="btn-danger" onclick="clearDisplay(2)">清除</button>
+          </div>
+          <div id="s2" class="status"></div>
+        </div>
       </div>
+
       <div class="col">
-        <label for="t3">ESP32 #3</label>
-        <textarea id="t3" placeholder="文字"></textarea>
-        <button onclick="sendSingle(3)">送出</button>
-        <div id="s3" class="status"></div>
+        <div class="card">
+          <div class="device-header">
+            <span class="device-name">ESP32 #3</span>
+            <input type="text" id="ip3" placeholder="輸入 IP 位址" value="10.73.10.206">
+          </div>
+          
+          <label for="t3">顯示內容</label>
+          <textarea id="t3" placeholder="文字"></textarea>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="sendSingle(3)">更新顯示</button>
+            <button class="btn-secondary" onclick="testConnection(3)">測試連線</button>
+            <button class="btn-danger" onclick="clearDisplay(3)">清除</button>
+          </div>
+          <div id="s3" class="status"></div>
+        </div>
       </div>
+    </div>
+    <!-- 同步控制 -->
+    <div class="card sync-section">
+      <h2>同步顯示</h2>
+      <textarea id="tAll" placeholder="文字"></textarea>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="sendAllSame()">同步更新所有裝置</button>
+        <button class="btn-secondary" onclick="testAllConnections()">測試所有連線</button>
+        <button class="btn-danger" onclick="clearAllDisplays()">清除所有顯示</button>
+      </div>
+      <div id="sAll" class="status"></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2 style="font-size: 16px;">同步顯示</h2>
-    <textarea id="tAll" placeholder="文字"></textarea>
-    <button onclick="sendAllSame()">送出</button>
-    <div id="sAll" class="status"></div>
-  </div>
-
   <script>
-
     function getIP(idx) {
-      const table = {
-        1: 'ip ',  // ESP32 #1
-        2: 'ip',  // ESP32 #2
-        3: 'ip'   // ESP32 #3
-      };
-      return table[idx];
+      return document.getElementById('ip' + idx).value.trim();
     }
 
     async function postText(ip, text) {
@@ -119,47 +295,185 @@
       return await res.text();
     }
 
+    async function postClear(ip) {
+      const url = `http://${ip}/clear`;
+      const res = await fetch(url, {
+        method: 'POST'
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.text();
+    }
+
+    async function testConn(ip) {
+      const url = `http://${ip}/`;
+      const res = await fetch(url, {
+        method: 'GET'
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.text();
+    }
+
+    function setPreset(idx, text) {
+      document.getElementById('t' + idx).value = text;
+    }
+
     async function sendSingle(idx) {
       const ip = getIP(idx);
-      const text = document.getElementById('t' + idx).value;
-      const statusEl = document.getElementById('s' + idx);
+      if (!ip) {
+        showStatus(idx, '請輸入 IP 位址', 'err');
+        return;
+      }
 
-      statusEl.textContent = '送出中... (' + ip + ')';
-      statusEl.className = 'status';
+      const text = document.getElementById('t' + idx).value;
+      if (!text) {
+        showStatus(idx, '請輸入要顯示的文字', 'err');
+        return;
+      }
+
+      showStatus(idx, `送出中... (${ip})`, 'pending');
 
       try {
         const reply = await postText(ip, text);
-        statusEl.textContent = '成功：' + reply;
-        statusEl.className = 'status ok';
+        showStatus(idx, `✓ 成功更新：${text}`, 'ok');
       } catch (e) {
-        statusEl.textContent = '失敗：' + e.message;
-        statusEl.className = 'status err';
+        showStatus(idx, `✗ 失敗：${e.message}`, 'err');
+      }
+    }
+
+    async function clearDisplay(idx) {
+      const ip = getIP(idx);
+      if (!ip) {
+        showStatus(idx, '請輸入 IP 位址', 'err');
+        return;
+      }
+
+      showStatus(idx, `清除中... (${ip})`, 'pending');
+
+      try {
+        await postClear(ip);
+        showStatus(idx, `✓ 已清除顯示`, 'ok');
+      } catch (e) {
+        showStatus(idx, `✗ 清除失敗：${e.message}`, 'err');
+      }
+    }
+
+    async function testConnection(idx) {
+      const ip = getIP(idx);
+      if (!ip) {
+        showStatus(idx, '請輸入 IP 位址', 'err');
+        return;
+      }
+
+      showStatus(idx, `測試連線中... (${ip})`, 'pending');
+
+      try {
+        const reply = await testConn(ip);
+        showStatus(idx, `✓ 連線正常：${reply}`, 'ok');
+      } catch (e) {
+        showStatus(idx, `✗ 連線失敗：${e.message}`, 'err');
       }
     }
 
     async function sendAllSame() {
       const text = document.getElementById('tAll').value;
-      const sAll = document.getElementById('sAll');
-      const ips = [getIP(1), getIP(2), getIP(3)];
+      if (!text) {
+        showStatus('All', '請輸入要顯示的文字', 'err');
+        return;
+      }
 
-      sAll.textContent = '同步更新中...';
-      sAll.className = 'status';
+      showStatus('All', '同步更新中...', 'pending');
 
       const results = [];
-      for (let i = 0; i < 3; i++) {
+      for (let i = 1; i <= 3; i++) {
+        const ip = getIP(i);
+        if (!ip) {
+          results.push(`#${i} 跳過（無IP）`);
+          continue;
+        }
+
         try {
-          const reply = await postText(ips[i], text);
-          results.push(`#${i+1} OK(${reply})`);
+          await postText(ip, text);
+          results.push(`#${i} ✓`);
         } catch (e) {
-          results.push(`#${i+1} NG(${e.message})`);
+          results.push(`#${i} ✗(${e.message})`);
         }
       }
-      sAll.textContent = results.join(' | ');
-      if (results.some(r => r.includes('NG'))) {
-        sAll.className = 'status err';
-      } else {
-        sAll.className = 'status ok';
+
+      const hasError = results.some(r => r.includes('✗'));
+      showStatus('All', results.join(' | '), hasError ? 'err' : 'ok');
+    }
+
+    async function testAllConnections() {
+      showStatus('All', '測試所有連線中...', 'pending');
+
+      const results = [];
+      for (let i = 1; i <= 3; i++) {
+        const ip = getIP(i);
+        if (!ip) {
+          results.push(`#${i} 跳過（無IP）`);
+          continue;
+        }
+
+        try {
+          await testConn(ip);
+          results.push(`#${i} ✓`);
+        } catch (e) {
+          results.push(`#${i} ✗`);
+        }
       }
+
+      const hasError = results.some(r => r.includes('✗'));
+      showStatus('All', results.join(' | '), hasError ? 'err' : 'ok');
+    }
+
+    async function clearAllDisplays() {
+      if (!confirm('確定要清除所有裝置的顯示嗎？')) return;
+
+      showStatus('All', '清除所有顯示中...', 'pending');
+
+      const results = [];
+      for (let i = 1; i <= 3; i++) {
+        const ip = getIP(i);
+        if (!ip) {
+          results.push(`#${i} 跳過（無IP）`);
+          continue;
+        }
+
+        try {
+          await postClear(ip);
+          results.push(`#${i} ✓`);
+        } catch (e) {
+          results.push(`#${i} ✗`);
+        }
+      }
+
+      const hasError = results.some(r => r.includes('✗'));
+      showStatus('All', results.join(' | '), hasError ? 'err' : 'ok');
+    }
+
+    function showStatus(idx, message, type) {
+      const statusEl = document.getElementById('s' + idx);
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + type;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      for (let i = 1; i <= 3; i++) {
+        const saved = localStorage.getItem('ip' + i);
+        if (saved) {
+          document.getElementById('ip' + i).value = saved;
+        }
+      }
+    });
+
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('ip' + i).addEventListener('change', function() {
+        localStorage.setItem('ip' + i, this.value);
+      });
     }
   </script>
 </body>
