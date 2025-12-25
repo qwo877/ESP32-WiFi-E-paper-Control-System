@@ -4,19 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>電子紙控制面板</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
       padding: 16px;
       min-height: 100vh;
+      background: #f5f5f5;
     }
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
-    h1 { 
-      color: #333; 
+    h1 {
+      color: #333;
       margin-bottom: 20px;
       text-align: center;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
@@ -28,6 +30,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
+
     .device-header {
       display: flex;
       align-items: center;
@@ -51,6 +54,7 @@
       color: #333;
       min-width: 100px;
     }
+
     .row {
       display: flex;
       gap: 16px;
@@ -60,6 +64,7 @@
       flex: 1 1 300px;
       min-width: 280px;
     }
+
     label {
       font-size: 14px;
       font-weight: 500;
@@ -84,6 +89,7 @@
       outline: none;
       border-color: #1976d2;
     }
+
     .btn-group {
       display: flex;
       gap: 8px;
@@ -120,10 +126,18 @@
     .btn-danger:hover {
       background: #c62828;
     }
+    .btn-success {
+      background: #388e3c;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #2e7d32;
+    }
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     .status {
       margin-top: 8px;
       padding: 8px;
@@ -136,13 +150,13 @@
       from { opacity: 0; transform: translateY(-5px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .status.ok { 
-      background: #e8f5e9; 
-      color: #2e7d32; 
+    .status.ok {
+      background: #e8f5e9;
+      color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
-    .status.err { 
-      background: #ffebee; 
+    .status.err {
+      background: #ffebee;
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
@@ -151,36 +165,7 @@
       color: #e65100;
       border: 1px solid #ffe0b2;
     }
-    .preset-section {
-      background: #f5f5f5;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-    .preset-section h3 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      color: #666;
-    }
-    .preset-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .preset-btn {
-      padding: 6px 12px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .preset-btn:hover {
-      background: #1976d2;
-      color: white;
-      border-color: #1976d2;
-    }
+
     .sync-section {
       color: #333;
       padding: 20px;
@@ -193,19 +178,96 @@
     .sync-section textarea {
       margin-bottom: 12px;
     }
-    .settings-icon {
-      cursor: pointer;
-      padding: 4px;
-      color: #757575;
+
+    .excel-upload-section {
+      background: #333;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
     }
-    .settings-icon:hover {
-      color: #1976d2;
+    .excel-upload-section h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #e3f2fd;
+    }
+
+    .upload-area {
+      background: rgba(255,255,255,0.1);
+      border: 2px dashed rgba(255,255,255,0.5);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 12px;
+    }
+    .upload-area:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.8);
+    }
+    .upload-area.dragover {
+      background: rgba(255,255,255,0.3);
+      border-color: white;
+    }
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    .excel-preview {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .excel-preview h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.9);
+    }
+    .excel-preview-item {
+      background: rgba(255,255,255,0.15);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .excel-preview-item span {
+      font-family: monospace;
+    }
+    .excel-preview-item .badge {
+      background: rgba(255,255,255,0.3);
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>電子紙控制面板</h1>
+
+    <div class="card excel-upload-section">
+      <h2>Excel上傳</h2>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('excelFile').click()">
+        <p>選擇 Excel 檔案</p>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="handleExcelUpload(event)">
+      </div>
+      
+      <div id="excelPreview" class="excel-preview" style="display: none;">
+        <h3>預覽內容:</h3>
+        <div id="previewContent"></div>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn-success" id="sendExcelBtn" onclick="sendExcelData()" disabled>發送到裝置</button>
+        <button class="btn-secondary" onclick="clearExcelData()">清除</button>
+      </div>
+      <div id="sExcel" class="status"></div>
+    </div>
 
     <div class="row">
       <div class="col">
@@ -214,7 +276,6 @@
             <span class="device-name">ESP32 #1</span>
             <input type="text" id="ip1" placeholder="輸入 IP 位址" value="10.73.10.116">
           </div>
-          
           
           <label for="t1">顯示內容</label>
           <textarea id="t1" placeholder="文字"></textarea>
@@ -233,7 +294,6 @@
             <span class="device-name">ESP32 #2</span>
             <input type="text" id="ip2" placeholder="輸入 IP 位址" value="10.73.10.198">
           </div>
-          
           
           <label for="t2">顯示內容</label>
           <textarea id="t2" placeholder="文字"></textarea>
@@ -264,7 +324,7 @@
         </div>
       </div>
     </div>
-    <!-- 同步控制 -->
+
     <div class="card sync-section">
       <h2>同步顯示</h2>
       <textarea id="tAll" placeholder="文字"></textarea>
@@ -278,17 +338,72 @@
   </div>
 
   <script>
+    const REQUEST_TIMEOUT = 10000;
+    const MAX_RETRIES = 2;
+
+    let excelData = [];
+
     function getIP(idx) {
       return document.getElementById('ip' + idx).value.trim();
     }
 
+    async function fetchWithTimeout(url, options, timeout = REQUEST_TIMEOUT) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('請求超時');
+        }
+        throw error;
+      }
+    }
+
+    async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+      for (let i = 0; i <= retries; i++) {
+        try {
+          const response = await fetchWithTimeout(url, options);
+          
+          if (response.status === 409 || response.status === 429) {
+            return response;
+          }
+          
+          return response;
+        } catch (error) {
+          if (i === retries) throw error;
+          console.log(`重試 ${i + 1}/${retries}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
     async function postText(ip, text) {
       const url = `http://${ip}/update`;
-      const res = await fetch(url, {
+      const res = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: text
       });
+      
+      if (res.status === 409) {
+        throw new Error('裝置忙碌中，請稍後再試');
+      }
+      if (res.status === 429) {
+        const msg = await res.text();
+        throw new Error(msg || '請求過於頻繁');
+      }
+      if (res.status === 202) {
+        // 202 Accepted - 正常接受
+        return await res.text();
+      }
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
@@ -297,9 +412,20 @@
 
     async function postClear(ip) {
       const url = `http://${ip}/clear`;
-      const res = await fetch(url, {
+      const res = await fetchWithRetry(url, {
         method: 'POST'
       });
+      
+      if (res.status === 409) {
+        throw new Error('裝置忙碌中，請稍後再試');
+      }
+      if (res.status === 429) {
+        const msg = await res.text();
+        throw new Error(msg || '請求過於頻繁');
+      }
+      if (res.status === 202) {
+        return await res.text();
+      }
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
@@ -308,18 +434,158 @@
 
     async function testConn(ip) {
       const url = `http://${ip}/`;
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: 'GET'
-      });
+      }, 3000);
+      
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
       return await res.text();
     }
 
-    function setPreset(idx, text) {
-      document.getElementById('t' + idx).value = text;
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showExcelStatus('讀取檔案中...', 'pending');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          excelData = jsonData.slice(0, 3).map(row => {
+            const value = row[0];
+            return value !== undefined && value !== null ? String(value).trim() : '';
+          }).filter(val => val !== '');
+          
+          if (excelData.length === 0) {
+            showExcelStatus(' Excel 的 A 列沒有資料', 'err');
+            return;
+          }
+
+          displayExcelPreview();
+          showExcelStatus(`✓ 已讀取 ${excelData.length} 筆資料`, 'ok');
+          document.getElementById('sendExcelBtn').disabled = false;
+          
+        } catch (error) {
+          showExcelStatus(`解析失敗: ${error.message}`, 'err');
+          console.error(error);
+        }
+      };
+      
+      reader.onerror = function() {
+        showExcelStatus(' 讀取檔案失敗', 'err');
+      };
+      
+      reader.readAsArrayBuffer(file);
     }
+
+    function displayExcelPreview() {
+      const previewDiv = document.getElementById('excelPreview');
+      const contentDiv = document.getElementById('previewContent');
+      
+      contentDiv.innerHTML = '';
+      
+      excelData.forEach((text, index) => {
+        const deviceNum = index + 1;
+        const item = document.createElement('div');
+        item.className = 'excel-preview-item';
+        item.innerHTML = `
+          <span>ESP32 #${deviceNum}: ${text}</span>
+          <span class="badge">第 ${index + 1} 行</span>
+        `;
+        contentDiv.appendChild(item);
+      });
+      
+      if (excelData.length < 3) {
+        const warning = document.createElement('div');
+        warning.className = 'excel-preview-item';
+        warning.style.opacity = '0.7';
+        warning.innerHTML = `<span> 只有 ${excelData.length} 筆資料，部分裝置將不會更新</span>`;
+        contentDiv.appendChild(warning);
+      }
+      
+      previewDiv.style.display = 'block';
+    }
+
+    async function sendExcelData() {
+      if (excelData.length === 0) {
+        showExcelStatus(' 沒有可發送的資料', 'err');
+        return;
+      }
+
+      showExcelStatus('發送中...', 'pending');
+      document.getElementById('sendExcelBtn').disabled = true;
+
+      const results = [];
+      
+      for (let i = 0; i < Math.min(excelData.length, 3); i++) {
+        const deviceNum = i + 1;
+        const text = excelData[i];
+        const ip = getIP(deviceNum);
+        
+        if (!ip) {
+          results.push(`#${deviceNum}  (無IP)`);
+          continue;
+        }
+
+        try {
+          await postText(ip, text);
+          results.push(`#${deviceNum} ✓`);
+          
+          document.getElementById('t' + deviceNum).value = text;
+        } catch (e) {
+          results.push(`#${deviceNum} (${e.message})`);
+        }
+      }
+
+      const hasError = results.some(r => r.includes('X'));
+      showExcelStatus(results.join(' | '), hasError ? 'err' : 'ok');
+      document.getElementById('sendExcelBtn').disabled = false;
+    }
+
+    function clearExcelData() {
+      excelData = [];
+      document.getElementById('excelFile').value = '';
+      document.getElementById('excelPreview').style.display = 'none';
+      document.getElementById('sendExcelBtn').disabled = true;
+      showExcelStatus('', '');
+    }
+
+    function showExcelStatus(message, type) {
+      const statusEl = document.getElementById('sExcel');
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + type;
+    }
+
+    const uploadArea = document.getElementById('uploadArea');
+    
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        document.getElementById('excelFile').files = files;
+        handleExcelUpload({ target: { files: files } });
+      }
+    });
 
     async function sendSingle(idx) {
       const ip = getIP(idx);
@@ -338,9 +604,10 @@
 
       try {
         const reply = await postText(ip, text);
-        showStatus(idx, `✓ 成功更新：${text}`, 'ok');
+        showStatus(idx, `✓ 已接受請求 (電子紙更新中)`, 'ok');
+        console.log(`ESP32 #${idx} 回應:`, reply);
       } catch (e) {
-        showStatus(idx, `✗ 失敗：${e.message}`, 'err');
+        showStatus(idx, `✗ 失敗: ${e.message}`, 'err');
       }
     }
 
@@ -355,9 +622,9 @@
 
       try {
         await postClear(ip);
-        showStatus(idx, `✓ 已清除顯示`, 'ok');
+        showStatus(idx, `✓ 已接受清除請求`, 'ok');
       } catch (e) {
-        showStatus(idx, `✗ 清除失敗：${e.message}`, 'err');
+        showStatus(idx, `✗ 清除失敗: ${e.message}`, 'err');
       }
     }
 
@@ -372,9 +639,9 @@
 
       try {
         const reply = await testConn(ip);
-        showStatus(idx, `✓ 連線正常：${reply}`, 'ok');
+        showStatus(idx, `✓ 連線正常: ${reply}`, 'ok');
       } catch (e) {
-        showStatus(idx, `✗ 連線失敗：${e.message}`, 'err');
+        showStatus(idx, `✗ 連線失敗: ${e.message}`, 'err');
       }
     }
 
@@ -391,7 +658,7 @@
       for (let i = 1; i <= 3; i++) {
         const ip = getIP(i);
         if (!ip) {
-          results.push(`#${i} 跳過（無IP）`);
+          results.push(`#${i} 跳過(無IP)`);
           continue;
         }
 
@@ -414,7 +681,7 @@
       for (let i = 1; i <= 3; i++) {
         const ip = getIP(i);
         if (!ip) {
-          results.push(`#${i} 跳過（無IP）`);
+          results.push(`#${i} 跳過(無IP)`);
           continue;
         }
 
@@ -431,7 +698,7 @@
     }
 
     async function clearAllDisplays() {
-      if (!confirm('確定要清除所有裝置的顯示嗎？')) return;
+      if (!confirm('確定要清除所有裝置的顯示嗎?')) return;
 
       showStatus('All', '清除所有顯示中...', 'pending');
 
@@ -439,7 +706,7 @@
       for (let i = 1; i <= 3; i++) {
         const ip = getIP(i);
         if (!ip) {
-          results.push(`#${i} 跳過（無IP）`);
+          results.push(`#${i} 跳過(無IP)`);
           continue;
         }
 
