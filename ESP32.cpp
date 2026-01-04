@@ -40,7 +40,6 @@ void epdClear()
 
 void epdShowText(const String& text)
 {
-  
   display.setFullWindow();
   display.firstPage();
   do
@@ -50,22 +49,86 @@ void epdShowText(const String& text)
     display.setFont(&FreeMonoBold24pt7b);
     display.setTextSize(1);
 
-    int16_t x1, y1;
-    uint16_t w, h;
-    String t = text;
+    int lineHeight = 35;
+    int yStart = 50;
+    int currentY = yStart;
+    int maxWidth = display.width() - 20;
+    
+    String remaining = text;
+    
+    while (remaining.length() > 0 && currentY < display.height() - lineHeight)
+    {
+      int newlinePos = remaining.indexOf('\n');
+      String line;
+      
+      if (newlinePos >= 0) {
+        line = remaining.substring(0, newlinePos);
+        remaining = remaining.substring(newlinePos + 1);
+      } else {
+        line = remaining;
+        remaining = "";
+      }
+      while (line.length() > 0 && currentY < display.height() - lineHeight)
+      {
+        String displayLine = line;
+        int16_t x1, y1;
+        uint16_t w, h;
+        display.getTextBounds(displayLine.c_str(), 0, 0, &x1, &y1, &w, &h);
+        if (w > maxWidth)
+        {
+          int lastSpace = -1;
+          int testPos = line.length();
+          
+          while (testPos > 0)
+          {
+            testPos--;
+            if (line.charAt(testPos) == ' ')
+            {
+              String testLine = line.substring(0, testPos);
+              display.getTextBounds(testLine.c_str(), 0, 0, &x1, &y1, &w, &h);
+              
+              if (w <= maxWidth)
+              {
+                lastSpace = testPos;
+                break;
+              }
+            }
+          }
+          if (lastSpace > 0)
+          {
+            displayLine = line.substring(0, lastSpace);
+            line = line.substring(lastSpace + 1);
+            display.getTextBounds(displayLine.c_str(), 0, 0, &x1, &y1, &w, &h);
+          }
+          else
+          {
+            while (w > maxWidth && displayLine.length() > 0)
+            {
+              displayLine = displayLine.substring(0, displayLine.length() - 1);
+              display.getTextBounds(displayLine.c_str(), 0, 0, &x1, &y1, &w, &h);
+            }
+            
+            if (displayLine.length() == 0) break;
+            line = line.substring(displayLine.length());
+          }
+        }
+        else
+        {
+          line = "";
+        }
+        display.getTextBounds(displayLine.c_str(), 0, 0, &x1, &y1, &w, &h);
+        int16_t x = (display.width() - w) / 2;
+        
+        display.setCursor(x, currentY);
+        display.print(displayLine);
 
-    display.getTextBounds(t, 0, 0, &x1, &y1, &w, &h);
-
-    int16_t x = (display.width()  - w) / 2;
-    int16_t y = (display.height() + h) / 2;
-
-    display.setCursor(x, y);
-    display.print(t);
+        currentY += lineHeight;
+      }
+    }
   }
   while (display.nextPage());
   display.hibernate();
 }
-
 void handleRoot()
 {
   String msg = "OK - ";

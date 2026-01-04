@@ -2,14 +2,18 @@
 #include <WebServer.h>
 #include <GxEPD2_BW.h>
 #include <U8g2_for_Adafruit_GFX.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+const char* WIFI_SSID     = "qwo124";
+const char* WIFI_PASSWORD = "qwoqwoqwo";
 
-// WiFi 設定
-const char* WIFI_SSID     = "此網路不符合WPA2協議";
-const char* WIFI_PASSWORD = "QooQooQoo";
+//#define USE_STATIC_IP 1
+#if USE_STATIC_IP
+IPAddress local_IP(192, 168, 1, 101);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+#endif
 
-const char* DEVICE_NAME = "EPD-Node-1"; 
-
-
+const char* DEVICE_NAME = "EPD-Node-1";
 
 static const uint8_t EPD_CS   = 3;
 static const uint8_t EPD_DC   = 14;
@@ -30,7 +34,7 @@ void epdClear()
   display.firstPage();
   do
   {
-    display.fillScreen(GxEPD_WHITE);
+    display.fillScreen(GxEPD_BLACK);
   }
   while (display.nextPage());
   display.hibernate();
@@ -47,12 +51,82 @@ void epdShowText(const String& text)
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
     u8g2Fonts.setFont(u8g2_font_wqy16_t_gb2312);
-    int16_t textWidth = u8g2Fonts.getUTF8Width(text.c_str());
-    int16_t x = (display.width() - textWidth) / 2;
-    int16_t y = display.height() / 2;
     
-    u8g2Fonts.setCursor(x, y);
-    u8g2Fonts.print(text);
+    int lineHeight = 20;
+    int yStart = 50;
+    int currentY = yStart;
+    int maxWidth = display.width() - 20;
+    
+    String remaining = text;
+    while (remaining.length() > 0)
+    {
+      int newlinePos = remaining.indexOf('\n');
+      String line;
+      
+      if (newlinePos >= 0) {
+        line = remaining.substring(0, newlinePos);
+        remaining = remaining.substring(newlinePos + 1);
+      } else {
+        line = remaining;
+        remaining = "";
+      }
+      while (line.length() > 0)
+      {
+        String displayLine = line;
+        int16_t textWidth = u8g2Fonts.getUTF8Width(displayLine.c_str());
+        if (textWidth > maxWidth)
+        {
+          int lastSpace = -1;
+          int testPos = line.length();
+          
+          while (testPos > 0)
+          {
+            testPos--;
+            if (line.charAt(testPos) == ' ')
+            {
+              String testLine = line.substring(0, testPos);
+              int16_t testWidth = u8g2Fonts.getUTF8Width(testLine.c_str());
+              
+              if (testWidth <= maxWidth)
+              {
+                lastSpace = testPos;
+                break;
+              }
+            }
+          }
+          
+          if (lastSpace > 0)
+          {
+            displayLine = line.substring(0, lastSpace);
+            line = line.substring(lastSpace + 1);
+          }
+          else
+          {
+            while (textWidth > maxWidth && displayLine.length() > 0)
+            {
+              displayLine = displayLine.substring(0, displayLine.length() - 1);
+              textWidth = u8g2Fonts.getUTF8Width(displayLine.c_str());
+            }
+            line = line.substring(displayLine.length());
+          }
+        }
+        else
+        {
+          line = "";
+        }
+        
+        textWidth = u8g2Fonts.getUTF8Width(displayLine.c_str());
+        int16_t x = (display.width() - textWidth) / 2;
+        u8g2Fonts.setCursor(x, currentY);
+        u8g2Fonts.print(displayLine);
+        currentY += lineHeight;
+        if (currentY > display.height() - lineHeight)
+        {
+          remaining = "";
+          break;
+        }
+      }
+    }
   }
   while (display.nextPage());
   display.hibernate();
